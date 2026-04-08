@@ -25,10 +25,7 @@
     @endif
 
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-slate-700">All Users</h3>
-            <span class="text-xs text-slate-400 bg-slate-50 border border-slate-100 rounded-full px-2.5 py-1 font-medium">{{ $users->total() ?? $users->count() }} users</span>
-        </div>
+       
 
         <div class="overflow-x-auto">
             <table class="w-full rss-table">
