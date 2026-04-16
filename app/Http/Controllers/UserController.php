@@ -67,7 +67,7 @@ class UserController extends Controller
                     'max:255',
                     Rule::unique('users')->ignore($user->id), // Now safely ignores the actual user's ID
                 ],
-                'role' => ['required', 'string', 'in:admin,teacher,user'], 
+                'role' => ['required', 'string', 'in:admin,teacher,student'],
             ]);
 
             $user->update($validated);

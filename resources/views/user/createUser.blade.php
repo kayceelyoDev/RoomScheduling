@@ -78,7 +78,7 @@
                                             (Full Access)</option>
                                         <option value="teacher" {{ old('role') == 'teacher' ? 'selected' : '' }}>Teacher
                                         </option>
-                                        <option value="user" {{ old('role') == 'student' ? 'selected' : '' }}>Student
+                                        <option value="student" {{ old('role') == 'student' ? 'selected' : '' }}>Student
                                         </option>
                                     </select>
                                 </div>
