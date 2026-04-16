@@ -37,13 +37,14 @@ class UserController extends Controller
         ]);
 
         // Create a new user with the validated data
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => bcrypt($request->password),
-            'email_verified_at' => now(),
             'role' => $request->role,
         ]);
+        
+        $user->markEmailAsVerified();
 
         // Redirect back to the user management page with a success message
         return redirect()->route('manageUsers.index')->with('success', 'User created successfully.');
