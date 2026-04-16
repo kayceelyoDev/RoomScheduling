@@ -24,17 +24,12 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
-        // 1. Manually create the Faker instance
-        $faker = \Faker\Factory::create();
-
         return [
-            // 2. Use the local $faker variable
-            'name' => $faker->name(),
-            'email' => $faker->unique()->safeEmail(),
+            'name' => fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'role' => $faker->randomElement(['admin', 'user']),
         ];
     }
 
