@@ -28,8 +28,21 @@
         </div>
     @endif
 
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+    <div x-data="{
+        openModal: false,
+        action: '',
+        requestId: null,
+        submitUrl: '',
+        
+        open(action, id, url) {
+            this.action = action;
+            this.requestId = id;
+            this.submitUrl = url;
+            this.openModal = true;
+        }
+    }">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
             @if ($requests->isEmpty())
                 <div class="py-16 text-center">
                     <div class="flex flex-col items-center gap-2">
@@ -91,29 +104,17 @@
                                 </td>
                                 <td class="text-right">
                                     @if ($req->status === 'pending')
-                                        <div class="flex flex-col items-end gap-2 min-w-[180px]">
-                                            <form method="POST" action="{{ route('userRequest.approve', $req) }}" class="w-full">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="text" name="admin_remark" placeholder="Optional note…"
-                                                    class="block w-full mb-1.5 text-xs rounded-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 bg-slate-50">
-                                                <button type="submit"
-                                                    class="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition">
-                                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                                                    Approve & Create Schedule
-                                                </button>
-                                            </form>
-                                            <form method="POST" action="{{ route('userRequest.reject', $req) }}" class="w-full">
-                                                @csrf
-                                                @method('PATCH')
-                                                <input type="text" name="admin_remark" placeholder="Reason for rejection…"
-                                                    class="block w-full mb-1.5 text-xs rounded-lg border-slate-200 focus:border-red-400 focus:ring-red-400 bg-slate-50">
-                                                <button type="submit"
-                                                    class="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white border border-red-200 text-red-700 hover:bg-red-50 text-xs font-semibold rounded-lg transition">
-                                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                                                    Reject
-                                                </button>
-                                            </form>
+                                        <div class="flex flex-col sm:flex-row items-end justify-end gap-2 min-w-[180px]">
+                                            <button @click="open('approve', {{ $req->id }}, '{{ route('userRequest.approve', $req) }}')" type="button"
+                                                class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition shadow-sm">
+                                                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                                Approve
+                                            </button>
+                                            <button @click="open('reject', {{ $req->id }}, '{{ route('userRequest.reject', $req) }}')" type="button"
+                                                class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white border border-red-200 text-red-700 hover:bg-red-50 text-xs font-semibold rounded-lg transition shadow-sm">
+                                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                                                Reject
+                                            </button>
                                         </div>
                                     @else
                                         <span class="text-xs text-slate-300">—</span>
@@ -127,6 +128,59 @@
                     {{ $requests->links() }}
                 </div>
             @endif
+        </div>
+    </div>
+
+        <!-- Action Modal -->
+        <div x-show="openModal" class="fixed inset-0 z-[100] flex items-center justify-center" style="display: none;" x-cloak>
+            <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" 
+                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 @click="openModal = false"></div>
+
+            <div class="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-6 m-4 transform transition-all"
+                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                 
+                 <div class="flex items-start gap-4 mb-5">
+                     <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                          :class="action === 'approve' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'">
+                          <div x-show="action === 'approve'">
+                              <i data-lucide="check" class="w-5 h-5"></i>
+                          </div>
+                          <div x-show="action === 'reject'">
+                              <i data-lucide="x" class="w-5 h-5"></i>
+                          </div>
+                     </div>
+                     <div class="pt-1">
+                        <h3 class="text-lg font-bold text-slate-900" x-text="action === 'approve' ? 'Approve Request' : 'Reject Request'"></h3>
+                        <p class="text-sm text-slate-500 mt-1" x-text="action === 'approve' ? 'Are you sure you want to approve this room request and automate schedule creation?' : 'Are you sure you want to reject this request?'"></p>
+                     </div>
+                 </div>
+
+                 <form :action="submitUrl" method="POST">
+                     @csrf
+                     @method('PATCH')
+                     
+                     <div class="mb-5">
+                         <label class="block text-sm font-medium text-slate-700 mb-1.5" x-text="action === 'approve' ? 'Optional Note' : 'Reason for Rejection'"></label>
+                         <textarea name="admin_remark" rows="3" 
+                             class="w-full rounded-xl border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 text-sm shadow-sm placeholder-slate-400"
+                             :placeholder="action === 'approve' ? 'Add an optional note (e.g. Please ensure room is clean after use)...' : 'Briefly explain why this request cannot be approved...'"></textarea>
+                     </div>
+
+                     <div class="flex justify-end gap-3 mt-6">
+                         <button type="button" @click="openModal = false" class="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition">
+                             Cancel
+                         </button>
+                         <button type="submit" 
+                             class="px-4 py-2 text-sm font-semibold text-white rounded-xl transition inline-flex items-center gap-2"
+                             :class="action === 'approve' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'">
+                             <span x-text="action === 'approve' ? 'Approve & Create Schedule' : 'Reject Request'"></span>
+                         </button>
+                     </div>
+                 </form>
+            </div>
         </div>
     </div>
 </x-app-layout>
